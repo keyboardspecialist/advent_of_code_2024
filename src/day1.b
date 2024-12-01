@@ -90,8 +90,7 @@ AND merge_merge(o, t, b, m, e) BE
 	}
 }
 
-// Hash size should be ~1.5x the list length for good load factor
-AND hash_count(key, hashv, sz) = (key * 2654435761) >> 16 & (sz-1) // Multiplicative hash
+AND hash_count(key, hashv, sz) = (key * 2654435761) >> 16 & (sz-1) 
 
 AND count_sparse(ll, rl, idx) = VALOF
 {	LET sz, sim = 1, 0
