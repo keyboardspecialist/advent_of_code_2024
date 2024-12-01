@@ -46,7 +46,7 @@ AND location_lists() BE
 	AND sim = 0
 	AND eof = FALSE
 
-	{	eof := fget_line(line, 16 * bytesperword)
+	{	eof := fget_line(line, 12 * bytesperword)
 		IF line%0 > 0 DO	{	parse_num2(line, @(ll!idx), @(rl!idx))
 												idx +:= 1 
 											}
@@ -87,8 +87,8 @@ AND merge_split(o, t, b, e) BE
 AND merge_merge(o, t, b, m, e) BE
 {	LET ib, im = b, m
 	FOR i = b TO e-1 DO
-	{		TEST ib < m & (im >= e | o!ib <= o!im) 
-			THEN { t!i := o!ib; ib := ib + 1 }
-			ELSE { t!i := o!im; im := im + 1 }
+	{	TEST ib < m & (im >= e | o!ib <= o!im) 
+		THEN { t!i := o!ib; ib := ib + 1 }
+		ELSE { t!i := o!im; im := im + 1 }
 	}
 }
