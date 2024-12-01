@@ -17,6 +17,8 @@ MANIFEST
 LET start() = VALOF
 {	LET fname = VEC 10
 	LET scb = set_ramiostrm()
+	LET start, stop = 0, 0
+
 	writef("data/day%n.data", AOC_DAY)
 	rewindstream(scb)
 	fget_line(fname, scb!scb_end)
@@ -29,11 +31,11 @@ LET start() = VALOF
 		RESULTIS 1
 	}
 
-	start_timer()
+	start := get_cputime()
 	location_lists()
-	stop_timer()
+	stop := get_cputime()
 	cls_infile()
-	writef("Execution Time: %d ms *n", get_time_taken_ms())
+	writef("Execution Time: %d ms *n", (stop - start))
 	RESULTIS 0
 }
 AND location_lists() BE

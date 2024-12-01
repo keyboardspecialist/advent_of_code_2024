@@ -200,8 +200,8 @@ AND isnumeric(v) = v >= '0' & v <= '9' -> TRUE, FALSE
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
-AND start_timer()           BE g.start_time := sys(Sys_cputime)
-AND stop_timer()            BE g.stop_time  := sys(Sys_cputime)
-AND get_time_taken_ms()     =  g.stop_time - g.start_time   
-AND get_time_taken_sec()    = (g.stop_time - g.start_time) / 1000
+AND get_cputime()						= sys(Sys_cputime)
+AND start_timer()						BE g.start_time := sys(Sys_cputime)
+AND stop_timer()						BE g.stop_time  := sys(Sys_cputime)
+AND get_time_taken_ms()			=  g.stop_time - g.start_time   
+AND get_time_taken_sec()		= (g.stop_time - g.start_time) / 1000
