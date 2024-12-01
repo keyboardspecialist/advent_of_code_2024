@@ -70,7 +70,8 @@ AND merge_split(o, t, b, e) BE
 	merge_split(o, t, b, m)
 	merge_split(o, t, m, e)
 	merge_merge(o, t, b, m, e)
-	copy_vec(o, t, b, e)
+	//copy_vec(o, t, b, e)
+	sys(Sys_memmovewords, @(o!b), @(t!b), e-b)
 }
 
 AND merge_merge(o, t, b, m, e) BE
@@ -83,7 +84,7 @@ AND merge_merge(o, t, b, m, e) BE
 }
 
 //should use Sys call to memcpy
-AND copy_vec(o, t, b, e) BE
-{   LET i = ?
-    FOR i = b TO e-1 DO o!i := t!i
-}
+// AND copy_vec(o, t, b, e) BE
+// {   LET i = ?
+//     FOR i = b TO e-1 DO o!i := t!i
+// }
