@@ -47,9 +47,10 @@ AND location_lists() BE
 	AND eof = FALSE
 
 	{	eof := fget_line(line, 12 * bytesperword)
-		IF line%0 > 0 DO	{	parse_num2(line, @(ll!idx), @(rl!idx))
-												idx +:= 1 
-											}
+		IF line%0 > 0 DO	
+		{	parse_num2(line, @(ll!idx), @(rl!idx))
+			idx +:= 1 
+		}
 	} REPEATUNTIL eof = TRUE
 
 	temp := getvec(idx)
