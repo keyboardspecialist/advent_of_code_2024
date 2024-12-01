@@ -14,6 +14,27 @@ LET set_infile(filename) = VALOF
 	}
 	RESULTIS g.hFile    
 }
+
+AND set_ramostrm() = VALOF
+{	g.hoFile = findinoutput("RAM:")
+	g.cos := output()
+	selectoutput(g.hoFile)
+	RESULTIS scb
+}
+
+AND set_ramistrm() = VALOF
+{	g.hFile = findinoutput("RAM:")
+	g.cis := input()
+	selectinput(g.hFile)
+	RESULTIS scb
+}
+
+AND cls_ramistrm(scb) BE
+{	endread()
+	selectinput(g.cis)
+	scb := 0
+
+}
 	
 //close file and return input to previous stream
 AND cls_infile()    BE
