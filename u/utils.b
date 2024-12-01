@@ -152,8 +152,11 @@ AND parse_num2(str, a, b) BE
 		
 		buf%0 := p
 		str2int(buf, a)
-		
-		i := p + 2
+		//string_to_number(buf)
+		//!a := result2
+		p +:= 1
+		WHILE str%(p) = ' ' DO p +:= 1
+		i := p
 		p := 1
 		{	buf%p := str%i
 			p, i := p + 1, i + 1
@@ -161,6 +164,8 @@ AND parse_num2(str, a, b) BE
 		
 		buf%0 := p-1
 		str2int(buf, b)
+		//string_to_number(buf)
+		//!b := result2
 	}
 }
 
