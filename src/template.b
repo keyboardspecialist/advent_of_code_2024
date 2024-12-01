@@ -15,12 +15,13 @@ MANIFEST
 
 LET start() = VALOF
 {	LET fname = VEC 10
-	LET scb = set_ramostrm()
+	LET scb = set_ramiostrm()
 	writef("data/day%n.data", AOC_DAY)
-	rewindstream()
-	fget_line(fname, scb!end)
-	cls_outfile()
-	writef("fname is %s *n", fname)
+	rewindstream(scb)
+	fget_line(fname, scb!scb_end)
+	cls_ramiostrm()
+
+	writef("Reading data file... %s*n", fname)
 	
 	IF NOT set_infile("data/dayN.data") DO
 	{	writef("Bad file*n")
