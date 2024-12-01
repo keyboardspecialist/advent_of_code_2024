@@ -1,9 +1,11 @@
-SECTION ""
+SECTION "UTILS"
 
 GET "u/utils.h"
 GET "u/utils.b"
 
 .
+
+SECTION ""
 
 GET "u/utils.h"
 
