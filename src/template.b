@@ -14,7 +14,6 @@ MANIFEST
 
 }
 
-
 LET start() = VALOF
 {	LET fname = VEC 10
 	LET scb = set_ramiostrm()
@@ -25,7 +24,7 @@ LET start() = VALOF
 
 	writef("Reading data file... %s*n", fname)
 	
-	IF NOT set_infile("data/dayN.data") DO
+	IF NOT set_infile(fname) DO
 	{	writef("Bad file*n")
 		RESULTIS 1
 	}
