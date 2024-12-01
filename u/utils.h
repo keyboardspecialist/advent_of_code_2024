@@ -20,8 +20,15 @@ GLOBAL
     
     set_outfile
     cls_outfile
+
+    set_ramistrm
+    set_ramostrm
+
+    set_ramiostrm
+    cls_ramiostrm
     
     fread_line
+    fget_line
     
     parse_num2
     

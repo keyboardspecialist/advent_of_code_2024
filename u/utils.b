@@ -1,4 +1,4 @@
-GET "utils.h"
+GET "u/utils.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////   FILE IO
@@ -16,24 +16,36 @@ LET set_infile(filename) = VALOF
 }
 
 AND set_ramostrm() = VALOF
-{	g.hoFile = findinoutput("RAM:")
+{	g.hoFile := findinoutput("RAM:")
 	g.cos := output()
 	selectoutput(g.hoFile)
-	RESULTIS scb
+	RESULTIS g.hoFile
 }
 
 AND set_ramistrm() = VALOF
-{	g.hFile = findinoutput("RAM:")
+{	g.hFile := findinoutput("RAM:")
 	g.cis := input()
 	selectinput(g.hFile)
-	RESULTIS scb
+	RESULTIS g.hFile
 }
 
-AND cls_ramistrm(scb) BE
-{	endread()
-	selectinput(g.cis)
-	scb := 0
+AND set_ramiostrm() = VALOF
+{	g.hFile := findinoutput("RAM:")
+	g.hoFile := g.hFile
+	g.cis := input()
+	g.cos := output()
+	selectinput(g.hFile)
+	selectoutput(g.hFile)
+	RESULTIS g.hFile
+}
 
+AND cls_ramiostrm() BE
+{	endread()
+	endwrite()
+	selectinput(g.cis)
+	selectoutput(g.cos)
+	g.hFile := 0
+	g.hoFile := 0
 }
 	
 //close file and return input to previous stream
