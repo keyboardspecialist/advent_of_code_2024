@@ -14,13 +14,16 @@ MANIFEST
 
 	INC = 99
 	DEC = -99
-
-	SPACE = -1
-	EOL = -2
-	EOF = -3
+	NONE = 0
 }
 
-LET start() = VALOF
+STATIC 
+{ s.line
+	s.levels
+	s.cnt
+}
+
+LET start : => VALOF
 {	LET fname = VEC 10
 	LET scb = set_ramiostrm()
 	writef("data/day%n.data", AOC_DAY)
@@ -43,49 +46,24 @@ LET start() = VALOF
 	RESULTIS 0
 }
 
-AND rn_reports() BE
+AND rn_reports : BE
 {	LET safe = 0
-	AND lc, lp = 0, -1 //current and prev level
+	AND dir = NONE //ascending or descending
+	AND line = VEC 32
+	AND levels = VEC 8
+	AND eof = FALSE
 
-	LET chkch(c) = MATCH(c)
-		: ' '  => SPACE
-		: '0'..'9' => c - '0'
-		: '*n' => EOL
-		: endstreamch => EOF
+	AND parse
+	: <=0,?,?,? BE EXIT
+	: n, [a, ' '|'*n'], i, j BE { s.levels!j := a - '0'; parse(n-3, @(s.line!(i+2)), i+2, j+1); s.cnt+:=1}
+	: n, [a, b], i, j BE { s.levels!j := (a - '0') * 10 + (b - '0'); parse(n-3, @(s.line!(i+3)), i+3, j+1); s.cnt+:=1 }
 
-	LET c, i = 0, 1
-	AND dir = 0 //ascending or descending
-	{	c := chkch(rdch())
-		SWITCHON c INTO
-		{	DEFAULT:	{	lc +:= c * (i * 10) //handle numeric
-									i +:= 1
-								}
-
-			CASE -1:
-			CASE -2:	{	LET diff = 0
-									IF lp = -1 DO { lp := lc; LOOP }
-									IF lp = lc GOTO RESET
-
-									diff := lc - lp
-									IF diff < -2 | diff > 2 GOTO RESET
-
-									IF dir = 0 DO dir := diff > 0 -> INC, DEC
-									// TEST dir = 0
-									// THEN	{	IF lc <
-
-									// 			}
-
-								}
-			ENDCASE
-
-			CASE -3:	BREAK
-		}
-RESET:
-		UNLESS c ~= EOL UNTIL c = '*n' | c = endstreamch DO {c := rdch(); writef("%d*n", c) }
-		dir := 0
-		c := 0
-		i := 1
-
-
-	}	REPEAT
+	s.line := line
+	s.levels := levels
+	{	eof := fget_uline(line, 32)
+		s.cnt := 0
+		IF line!0 > 0 DO parse(line!0, @(s.line!1), 1, 0)
+		FOR i = 0 TO s.cnt DO writef(" %d ", s.levels!i)
+		writef("*n")
+	}	REPEATUNTIL eof = TRUE
 }
