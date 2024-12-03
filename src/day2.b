@@ -10,7 +10,7 @@ SECTION "RED-NOSED REPORTS"
 GET "u/utils.h"
 
 MANIFEST
-{ AOC_DAY = 2
+{	AOC_DAY = 2
 
 	INC = 99
 	DEC = -99
@@ -20,7 +20,7 @@ MANIFEST
 //Using these to keep state during parsing since BCPL doesn't support dynamic free vars
 // "closures"
 STATIC 
-{ s.line
+{	s.line
 	s.levels
 	s.cnt
 	s.dir
@@ -59,12 +59,12 @@ AND rn_reports : BE
 
 	AND parse
 	: <=0,?,?,? BE EXIT
-	: =1,[a],?,j 				BE	{ s.levels!j := a - '0'; s.cnt+:=1; EXIT }
-	: n, [a, ' '], i, j BE	{ s.levels!j := a - '0'
+	: =1,[a],?,j 				BE	{	s.levels!j := a - '0'; s.cnt+:=1; EXIT }
+	: n, [a, ' '], i, j BE	{	s.levels!j := a - '0'
 														s.cnt+:=1
 														parse(n-2, @(s.line!(i+2)), i+2, j+1)
 													}
-	: n, [a, b], i, j		BE	{ s.levels!j := (a - '0') * 10 + (b - '0')
+	: n, [a, b], i, j		BE	{	s.levels!j := (a - '0') * 10 + (b - '0')
 														s.cnt+:=1
 														parse(n-3, @(s.line!(i+3)), i+3, j+1)
 													}
