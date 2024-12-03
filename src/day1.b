@@ -53,8 +53,10 @@ AND location_lists() BE
 		}
 	} REPEATUNTIL eof = TRUE
 start_timer()
-	merge_sort(ll, temp, idx)
-	merge_sort(rl, temp, idx)
+	//merge_sort(ll, temp, idx)
+	//merge_sort(rl, temp, idx)
+	quicksort(ll, idx-1)
+	quicksort(rl, idx-1)
 stop_timer()
 writef("sort time %d *n", get_time_taken_ms())
 start_timer()
@@ -94,10 +96,10 @@ AND merge_merge(o, t, b, m, e) BE
 
 AND hash_count(key, hashv, sz) = (key * 2654435761) >> 16 & (sz-1) 
 
-AND count_sparse(ll, rl, idx) = VALOF
+AND count_sparse(ll, rl, len) = VALOF
 {	LET sz, sim = 1, 0
 	LET counts, keys, used = ?,?,?
-	WHILE sz #< idx#*3#/2 DO sz := sz << 1
+	WHILE sz #< len#*3#/2 DO sz := sz << 1
 	
 	counts := getvec(sz-1)
 	keys := getvec(sz-1)
@@ -105,7 +107,7 @@ AND count_sparse(ll, rl, idx) = VALOF
 	
 	FOR i = 0 TO sz-1 DO used!i := FALSE
 	
-	FOR i = 0 TO idx-1 DO
+	FOR i = 0 TO len-1 DO
 	{	LET val = rl!i
 		LET h = hash_count(val, 0, sz)
 		
@@ -118,7 +120,7 @@ AND count_sparse(ll, rl, idx) = VALOF
 		}	ELSE counts!h +:= 1
 	}
 
-	FOR i = 0 TO idx-1 DO
+	FOR i = 0 TO len-1 DO
 	{	LET val = ll!i
 		LET h = hash_count(val, 0, sz)
 		
@@ -132,3 +134,44 @@ AND count_sparse(ll, rl, idx) = VALOF
 
 	RESULTIS sim
 }
+
+
+//written by Martin Richards. Faster than my merge sort
+AND quicksort(v, n) BE qsort(v+1, v+n)
+
+AND qsort(l, r) BE
+{ WHILE l+8<r DO
+   { LET midpt = (l+r)/2
+     // Select a good(ish) median value.
+     LET val   = middle(!l, !midpt, !r)
+     LET i = partition(val, l, r)
+     // Only use recursion on the smaller partition.
+     TEST i>midpt THEN { qsort(i, r);   r := i-1 }
+                  ELSE { qsort(l, i-1); l := i   }
+   }
+
+   FOR p = l+1 TO r DO  // Now perform insertion sort.
+     FOR q = p-1 TO l BY -1 TEST q!0<=q!1 THEN BREAK
+                                          ELSE { LET t = q!0
+                                                 q!0 := q!1
+                                                 q!1 := t
+                                               }
+}
+
+AND middle(a, b, c) = a<b -> b<c -> b,
+                                    a<c -> c,
+                                           a,
+                             b<c -> a<c -> a,
+                                           c,
+                                    b
+
+AND partition(median, p, q) = VALOF
+{ LET t = ?
+  WHILE !p < median DO p := p+1
+  WHILE !q > median DO q := q-1
+  IF p>=q RESULTIS p
+  t  := !p
+  !p := !q
+  !q := t
+  p, q := p+1, q-1
+} REPEAT

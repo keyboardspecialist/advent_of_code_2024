@@ -29,6 +29,7 @@ GLOBAL
 
 	fread_line
 	fget_line
+	fget_uline
 
 	parse_num2
 

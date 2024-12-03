@@ -104,7 +104,6 @@ AND fread_line()   = VALOF
 AND fget_line(out, n) = VALOF
 {	LET ch = ?
 	LET nr = 0
-	LET buf = VEC 64
 	LET eof = FALSE
 	IF g.cis = input() RESULTIS TRUE   //we don't want this stream
 
@@ -116,16 +115,33 @@ AND fget_line(out, n) = VALOF
 			BREAK
 		}
 		IF ch = '*n' BREAK
-		buf%nr := ch; nr := nr + 1
+		out%(nr+1) := ch; nr := nr + 1
 	}	REPEATWHILE nr < n
+
+	out%0 := nr
+	RESULTIS eof
+}
+
+//unpacked variant
+AND fget_uline(out, n) = VALOF
+{	LET ch = ?
+	LET nr = 0
+	LET eof = FALSE
+	IF g.cis = input() RESULTIS TRUE   //we don't want this stream
+
+	out!0 := 0
 	
-	IF nr > 0 DO
-	{	LET i = 1
-		out%0 := nr
-		{	out%i := buf%(i-1)
-			i := i + 1
-		}	REPEATWHILE i <= nr
-	}
+	{	ch := rdch()
+		IF ch = endstreamch DO
+		{	eof := TRUE
+			BREAK
+		}
+		IF ch = '*n' BREAK
+		out!(nr + 1) := ch; nr := nr + 1
+	}	REPEATWHILE nr < n
+
+	out!0 := nr
+
 	RESULTIS eof
 }
 
