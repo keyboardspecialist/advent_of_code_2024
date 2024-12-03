@@ -50,14 +50,16 @@ LET start : => VALOF
 }
 
 AND rn_reports : BE
-{	LET safe = 0
+{	LET safe1, safe2 = 0, 0
 	AND line = VEC 32
 	AND levels = VEC 8
+	AND unsafes = VEC 800
+	AND ucnt = 0
 	AND eof = FALSE
 
 	AND parse
 	: <=0,?,?,? BE EXIT
-	: =1,[a],?,j 				BE	{ s.levels!j := a - '0'; s.cnt+:=1; EXIT}
+	: =1,[a],?,j 				BE	{ s.levels!j := a - '0'; s.cnt+:=1; EXIT }
 	: n, [a, ' '], i, j BE	{ s.levels!j := a - '0'
 														s.cnt+:=1
 														parse(n-2, @(s.line!(i+2)), i+2, j+1)
@@ -90,9 +92,78 @@ AND rn_reports : BE
 			{	LET t = check_level(s.levels!i, s.levels!(i+1), s.dir)
 				valid := valid & t
 			}
-			IF valid DO safe +:= 1
+			IF valid DO safe1 +:= 1
+
+			IF valid = FALSE DO
+			{	unsafes!ucnt := getvec(s.cnt+1)
+				sys(Sys_memmovewords, @(unsafes!ucnt!1), s.levels, s.cnt)
+				unsafes!ucnt!0 := s.cnt
+				ucnt +:= 1
+			}
 		}
 	}	REPEATUNTIL eof = TRUE
 
-	writef("SAFE %d *n", safe)
+	writef("SAFE %d *n", safe1)
+
+	safe2 := safe1
+
+	FOR i = 0 TO ucnt-1 DO
+	{	LET bads = VEC 8
+		AND valid = TRUE
+
+	//	writef("Checking unsafe %d *n", i)
+	//	FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
+	//	writef("*n")
+		bads!0 := 0
+		s.dir := NONE
+		FOR j = 1 TO (unsafes!i!0)-1 DO
+		{LET t = check_level(unsafes!i!j, unsafes!i!(j+1), s.dir)
+			IF t = FALSE DO
+			{	bads!0 +:= 1
+				bads!(bads!0) := j
+			}
+		}
+
+		FOR j = 1 TO bads!0 DO
+		{	s.dir := NONE
+			valid := TRUE
+			FOR k = 1 TO (unsafes!i!0)-1 DO
+			{	LET a,b = ?, ?
+				LET t = ?
+				//IF k = 1 & k = bads!j LOOP 
+				IF k+1 = unsafes!i!0 & k = bads!j LOOP
+
+			  a := k = bads!j -> 
+								(k = 1 -> unsafes!i!(k+1), unsafes!i!(k-1))
+								, unsafes!i!k
+
+				b := k = bads!j & k = 1 -> unsafes!i!(k+2), unsafes!i!(k+1)
+
+				t := check_level(a, b, s.dir)
+
+				IF t = FALSE & k <= unsafes!i!0-2 DO
+				{
+					a := unsafes!i!k
+					b := unsafes!i!(k+2)
+
+					t := check_level(a, b, s.dir)
+				}
+				valid := valid & t
+			}
+
+			IF valid DO { safe2 +:= 1; BREAK }
+		}
+		IF bads!0 = 5 & valid = FALSE  DO
+				{
+		writef("Checking unsafe %d *n", i)
+		FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
+		writef("*n")
+		writef("Found %d bad levels *n", bads!0)
+		FOR l = 1 TO bads!0 DO writef(" %d ", bads!l)
+		writef("*n")
+		}
+	}
+	writef("DAMPENER SAFE %d *n", safe2)
+
+	FOR i = 0 TO ucnt-1 DO freevec(unsafes!i)
 }
