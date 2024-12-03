@@ -108,62 +108,107 @@ AND rn_reports : BE
 	safe2 := safe1
 
 	FOR i = 0 TO ucnt-1 DO
-	{	LET bads = VEC 8
-		AND valid = TRUE
+	{	LET valid = TRUE
 
-	//	writef("Checking unsafe %d *n", i)
-	//	FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
-	//	writef("*n")
-		bads!0 := 0
-		s.dir := NONE
-		FOR j = 1 TO (unsafes!i!0)-1 DO
-		{LET t = check_level(unsafes!i!j, unsafes!i!(j+1), s.dir)
-			IF t = FALSE DO
-			{	bads!0 +:= 1
-				bads!(bads!0) := j
-			}
-		}
-
-		FOR j = 1 TO bads!0 DO
-		{	s.dir := NONE
+		FOR j = 1 TO unsafes!i!0 DO
+		{	LET tv = VEC 8
+			LET x = 0
+			FOR k = 1 TO unsafes!i!0 IF k ~= j DO { tv!x := unsafes!i!k; x+:=1 }
+			s.dir := NONE
 			valid := TRUE
-			FOR k = 1 TO (unsafes!i!0)-1 DO
+			FOR n = 0 TO x-2 DO
 			{	LET a,b = ?, ?
-				LET t = ?
-				//IF k = 1 & k = bads!j LOOP 
-				IF k+1 = unsafes!i!0 & k = bads!j LOOP
-
-			  a := k = bads!j -> 
-								(k = 1 -> unsafes!i!(k+1), unsafes!i!(k-1))
-								, unsafes!i!k
-
-				b := k = bads!j & k = 1 -> unsafes!i!(k+2), unsafes!i!(k+1)
-
+				LET t = ? 
+				a := tv!n
+				b := tv!(n+1)
 				t := check_level(a, b, s.dir)
-
-				IF t = FALSE & k <= unsafes!i!0-2 DO
-				{
-					a := unsafes!i!k
-					b := unsafes!i!(k+2)
-
-					t := check_level(a, b, s.dir)
-				}
 				valid := valid & t
 			}
-
-			IF valid DO { safe2 +:= 1; BREAK }
-		}
-		IF bads!0 = 5 & valid = FALSE  DO
-				{
-		writef("Checking unsafe %d *n", i)
-		FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
-		writef("*n")
-		writef("Found %d bad levels *n", bads!0)
-		FOR l = 1 TO bads!0 DO writef(" %d ", bads!l)
-		writef("*n")
+			IF valid DO { safe2 +:=1; BREAK }
 		}
 	}
-	writef("DAMPENER SAFE %d *n", safe2)
+
+	writef("brute force safe2 %d *n", safe2)
+
+	//I dunno, this is all a mess, finds too many
+	//safe2 := safe1
+
+	// FOR i = 0 TO ucnt-1 DO
+	// {	LET bads = VEC 8
+	// 	AND valid = TRUE
+
+	// //	writef("Checking unsafe %d *n", i)
+	// //	FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
+	// //	writef("*n")
+	// 	bads!0 := 0
+	// 	s.dir := NONE
+	// 	FOR j = 1 TO (unsafes!i!0)-1 DO
+	// 	{LET t = check_level(unsafes!i!j, unsafes!i!(j+1), s.dir)
+	// 		IF t = FALSE DO
+	// 		{	bads!0 +:= 1
+	// 			bads!(bads!0) := j
+	// 		}
+	// 	}
+
+		// FOR j = 1 TO bads!0 DO
+		// {	s.dir := NONE
+		// 	valid := TRUE
+		// 	FOR k = 1 TO (unsafes!i!0)-1 DO
+		// 	{	LET a,b = ?, ?
+		// 		LET t = ?
+		// 		IF k+1 = unsafes!i!0 & k = bads!j LOOP
+
+		// 	  a := k = bads!j -> 
+		// 						(k = 1 -> unsafes!i!(k+1), unsafes!i!(k-1))
+		// 						, unsafes!i!k
+
+		// 		b := k = bads!j & k = 1 -> unsafes!i!(k+2), unsafes!i!(k+1)
+
+		// 		t := check_level(a, b, s.dir)
+
+		// 		IF t = FALSE & k <= unsafes!i!0-2 DO
+		// 		{
+		// 			a := unsafes!i!k
+		// 			b := unsafes!i!(k+2)
+
+		// 			t := check_level(a, b, s.dir)
+		// 		}
+		// 		valid := valid & t
+		// 	}
+
+		// 	IF valid DO { safe2 +:= 1; BREAK }
+		// }
+
+		//now deal with directional issues
+		//backtrack til we clear the bad level that flipped the dir. itll be one of the preceeding 2 of our first marked
+		// IF bads!1 >= 2 FOR z = 0 TO 1 DO
+		// {	s.dir := NONE
+		// 	valid := TRUE
+		// 	FOR j = bads!1-z TO unsafes!i!0-1 DO
+		// 	{	LET a,b = ?, ?
+		// 		LET t = ?
+		// 		a := unsafes!i!(j)
+		// 		b := unsafes!i!(j+1)
+
+		// 		t := check_level(a, b, s.dir)
+		// 		valid := valid & t
+		// 	}
+		// 	IF valid DO { safe2 +:= 1; BREAK }
+		// }
+
+		// IF valid = FALSE  DO
+		// {
+		// writef("Checking unsafe %d *n", i)
+		// FOR l = 1 TO unsafes!i!0 DO writef(" %d ", unsafes!i!l)
+		// writef("*n")
+		// writef("Found %d bad levels *n", bads!0)
+		// FOR l = 1 TO bads!0 DO writef(" %d ", bads!l)
+		// writef("*n")
+		// }
+
+
+	//}
+	//writef("DAMPENER SAFE %d *n", safe2)
 
 	FOR i = 0 TO ucnt-1 DO freevec(unsafes!i)
 }
