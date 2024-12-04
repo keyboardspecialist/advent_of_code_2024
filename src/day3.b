@@ -38,6 +38,9 @@ STATIC
 	s.step
 
 	s.enabled
+
+	s.dos
+	s.donts
 }
 LET start : => VALOF
 {	LET fname = VEC 10
@@ -115,18 +118,38 @@ AND madder : BE
 							}
 
 	LET lexdo
-	: c'd', s INIT BE	{ writef("Found %c on %s *n", c, rulestr(s)); s.step := MAYBE_DO; s.tok!s.idx := c; s.idx +:= 1 }
-	: c'o', s MAYBE_DO BE	{writef("Found %c on %s *n", c, rulestr(s)); s.tok!s.idx := c; s.idx +:= 1} //
-	: ['d', 'o'], s MAYBE_DO BE	{writef("Found DO on %s *n", rulestr(s)); s.step := MAYBE_DONT }
-	: '(', s MAYBE_DONT BE	{ writef("Found LPAREN on %s *n", rulestr(s)); s.step := DOO
+	: c'd', s INIT BE	{	s.step := MAYBE_DO
+											s.tok!s.idx := c
+											s.idx +:= 1
+										}
+
+	: c'o', s MAYBE_DO BE	{	s.tok!s.idx := c
+													s.idx +:= 1
 												}
-	: ')', s DOO BE	{ writef("Found RPAREN on %s *n", rulestr(s)); s.enabled := TRUE //enable muls
+
+	: ['d', 'o'], s MAYBE_DO BE	{ s.step := MAYBE_DONT }
+
+	: '(', s MAYBE_DONT BE	{	s.step := DOO
+														s.idx := 0
+													}
+													
+	: ')', s DOO BE	{	s.enabled := TRUE
 										s.step := INIT
+										s.dos +:= 1
 									}
-	: c'n'|'*''|'t', s MAYBE_DONT BE	{ writef("Found %c on %s *n", c, rulestr(s)); s.tok!s.idx := c; s.idx +:= 1}
-	: ['d', 'o', 'n', '*'', 't'], s MAYBE_DONT BE	{ writef("Found DONT on %s *n", rulestr(s));s.step := DONT; s.idx := 0 }
-	: '(', s DONT BE	{writef("Found LPAREN on %s *n", rulestr(s)); s.step := DEND}
-	: ')', s DEND BE	{writef("Found RPAREN on %s *n", rulestr(s));s.enabled := FALSE; s.step := INIT }
+
+	: c'n'|'*''|'t', s MAYBE_DONT BE	{ s.tok!s.idx := c; s.idx +:= 1 }
+
+	: ['d', 'o', 'n', '*'', 't'], s MAYBE_DONT BE	{ s.step := DONT; s.idx := 0 }
+
+	: '(', s DONT BE	{	s.step := DEND
+										}
+
+	: ')', s DEND BE	{	s.enabled := FALSE
+											s.step := INIT
+											s.donts +:= 1
+										}
+
 	: ?, ? BE { s.step := INIT; s.idx := 0 }
 
 	LET ch = rdch()
@@ -148,12 +171,12 @@ AND madder : BE
 	}
 	writef("MADD ACC %d *n", acc)
 
-	//cur 74236024 -- too low
 	acc := 0
 	s.step := INIT
 	s.enabled := TRUE
 	rewindstream(g.hFile)
 	ch := rdch()
+
 	UNTIL ch = endstreamch DO
 	{	IF s.step <= REND & s.enabled DO lexmul(ch, s.step)
 		IF s.step = INIT | s.step >= MAYBE_DO DO lexdo(ch, s.step)
@@ -163,7 +186,7 @@ AND madder : BE
 		: 2, MAYBE_DO BE lexdo(tok, s.step)
 		: 5, MAYBE_DONT BE lexdo(tok, s.step)
 
-		IF s.step = REND DO 
+		IF s.step = REND & s.enabled DO 
 		{	s.step := INIT
 			acc +:= s.m1 * s.m2
 		}
