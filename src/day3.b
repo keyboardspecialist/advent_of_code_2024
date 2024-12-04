@@ -12,13 +12,12 @@ GET "u/utils.h"
 MANIFEST
 {	AOC_DAY = 3
 
-	EOF = -2
-	EOL = -1
-
-	MUL = 1
+	INIT = 0
+	MUL
 	LPAREN
 	RPAREN
-	NUM
+	NUM1
+	NUM2
 	COM
 	REND
 }
@@ -55,52 +54,88 @@ LET start : => VALOF
 	RESULTIS 0
 }
 
+AND tok2int : => MATCH(s.idx)
+						: 1 => s.tok!0
+						: 2 => s.tok!0 * 10 + s.tok!1
+						: 3 => s.tok!0 * 100 + s.tok!1 * 10 + s.tok!2
 
 // <number> - 0..9, 1-3 digits
 // MUL - 'm' 'u' 'l'
 //valid syntax => MUL '(' <number> ',' <number> ')'
 AND madder : BE
-{	LET num = VEC 3
-	LET tok = VEC 5
+{	LET tok = VEC 5
 	LET acc = 0
 
-	LET rule = TABLE MUL, LPAREN, NUM, COM, NUM, RPAREN, REND
+	LET lex
+	: 'm', INIT BE	{	s.tok!s.idx := 'm'
+										s.idx +:= 1
+										s.step := MUL
+									}
 
-	LET number
-	: d'0'..'9', i BE { s.num!i := d }
+	: 'u', MUL BE	{	s.tok!s.idx := 'u'
+									s.idx +:= 1
+								}
 
-	AND lex
-	: 'm', MUL BE	{ writef("Found M *n"); s.tok!s.idx := 'm'; s.idx +:= 1 }
-	: 'u', MUL BE	{ writef("Found U *n"); s.tok!s.idx := 'u'; s.idx +:= 1 }
-	: 'l', MUL BE	{ writef("Found L *n"); s.tok!s.idx := 'l'; s.idx +:= 1 }
-	: ['m', 'u', 'l'], MUL BE	{ writef("Found MUL! *n"); s.idx := 0; s.step := LPAREN }
-	: '(', LPAREN BE	{ s.step := NUM } 
-	: ')', RPAREN BE	{ s.step := REND }
-	: '0'..'9', NUM BE	{ }
-	: ',', COM BE	{ s.step := NUM }
-	: c?, r? BE {s.idx := 0; s.step := MUL } //{ writef("Found %c while trying to parse rule %s *n", c, rulestr(r))}
+	: 'l', MUL BE	{	s.tok!s.idx := 'l'
+									s.idx +:= 1
+								}
+
+	: ['m', 'u', 'l'],s MUL BE	{	s.idx := 0
+																s.step := LPAREN
+															}
+
+	: '(',s LPAREN BE	{	s.step := NUM1
+										}
+
+	: ')',s RPAREN BE	{	writef("Found %s *n", rulestr(s)) //same as comma, we only eat it
+											s.step := REND
+										}
+
+	: d '0'..'9', s NUM1|NUM2 BE	{	s.tok!s.idx := d - '0'
+																	s.idx +:= 1
+																}
+	: ',',s NUM1 BE	{	s.m1 := tok2int()
+										s.idx := 0
+										s.step := NUM2
+									}
+	: ')', s NUM2 BE	{	s.m2 := tok2int()
+											s.idx := 0
+											s.step := REND
+										}
+	: ',',s COM BE	{	writef("Found %s *n", rulestr(s)) //maybe not needed, we only eat this char
+										s.step := NUM2
+									}
+
+	: c?, r? BE {	s.idx := 0
+								s.step := INIT
+							}
 
 	LET ch = rdch()
 	LET idx = 0
 
-	s.num := num
 	s.tok := tok
-	s.step := MUL
+	s.step := INIT
 	UNTIL ch = endstreamch DO
-	{	ch := rdch()
-		lex(ch, step)
+	{	lex(ch, s.step)
 
-		IF s.idx = 3 DO lex(tok, step)
+		IF s.idx = 3 & s.step = MUL DO lex(tok, s.step)
 
+		IF s.step = REND DO
+		{	s.step := INIT //we're valid, compute it
+			acc +:= s.m1 * s.m2
+		}
+
+		ch := rdch()
 	}
-	writef("*n")
+	writef("MADD ACC %d *n", acc)
 }
 
-AND rulestr(r) = VALOF SWITCHON r INTO
-{	CASE MUL: RESULTIS "MUL"; ENDCASE
-	CASE LPAREN: RESULTIS "LPAREN"; ENDCASE
-	CASE RPAREN: RESULTIS "RPAREN"; ENDCASE
-	CASE NUM: RESULTIS "NUM"; ENDCASE
-	CASE COM: RESULTIS "COM"; ENDCASE
-	DEFAULT: RESULTIS "NOTARULE"; ENDCASE
-}
+AND rulestr 
+: INIT => "INIT"
+: MUL => "MUL"
+: LPAREN => "LPAREN"
+: RPAREN => "RPAREN"
+: NUM1 => "NUM1"
+: NUM2 => "NUM2"
+: COM => "COM"
+: REND => "REND"
