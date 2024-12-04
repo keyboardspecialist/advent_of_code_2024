@@ -14,6 +14,13 @@ MANIFEST
 
 	EOF = -2
 	EOL = -1
+
+	MUL = 1
+	LPAREN
+	RPAREN
+	NUM
+	COM
+	REND
 }
 
 STATIC
@@ -21,7 +28,9 @@ STATIC
 	s.m2
 
 	s.num
-	s.bufp
+	s.tok
+	s.idx
+	s.step
 }
 LET start : => VALOF
 {	LET fname = VEC 10
@@ -51,37 +60,47 @@ LET start : => VALOF
 // MUL - 'm' 'u' 'l'
 //valid syntax => MUL '(' <number> ',' <number> ')'
 AND madder : BE
-{
+{	LET num = VEC 3
+	LET tok = VEC 5
+	LET acc = 0
 
-	//static buffers
-	LET num = VEC 3
+	LET rule = TABLE MUL, LPAREN, NUM, COM, NUM, RPAREN, REND
 
-	LET peek
-	: => VALOF	{	IF s.bufp+1 >= g.hFile!scb_end RESULTIS EOF
-								RESULTIS g.hFile!scb_buf%(s.bufp+1)
-							}
-
-	AND scanner
-	: BE	{	LET c = g.hFile!scb_buf%s.bufp
-					IF s.bufp-g.hFile!scb_end <= 3 EXIT
-					lex( c, g.hFile!scb_buf%s.bufp )
-					scanner()
-				}
-	AND number
+	LET number
 	: d'0'..'9', i BE { s.num!i := d }
 
 	AND lex
-	: ='m',[a, b, c] BE MATCH(a, b, c)
-											: 'u', 'l','(' BE	{	writef("found a mul match at %d *n", s.bufp) //parse <number> <comma> <number> <rparen>
-																					s.bufp +:= 3
+	: 'm', MUL BE	{ writef("Found M *n"); s.tok!s.idx := 'm'; s.idx +:= 1 }
+	: 'u', MUL BE	{ writef("Found U *n"); s.tok!s.idx := 'u'; s.idx +:= 1 }
+	: 'l', MUL BE	{ writef("Found L *n"); s.tok!s.idx := 'l'; s.idx +:= 1 }
+	: ['m', 'u', 'l'], MUL BE	{ writef("Found MUL! *n"); s.idx := 0; s.step := LPAREN }
+	: '(', LPAREN BE	{ s.step := NUM } 
+	: ')', RPAREN BE	{ s.step := REND }
+	: '0'..'9', NUM BE	{ }
+	: ',', COM BE	{ s.step := NUM }
+	: c?, r? BE {s.idx := 0; s.step := MUL } //{ writef("Found %c while trying to parse rule %s *n", c, rulestr(r))}
 
-																				}
-											: c ? BE	{ writef("no match on char %c *n ", c); s.bufp +:= 1	//advance stream pos
-																		}
+	LET ch = rdch()
+	LET idx = 0
 
-	//
 	s.num := num
-	s.bufp := g.hFile!scb_pos
+	s.tok := tok
+	s.step := MUL
+	UNTIL ch = endstreamch DO
+	{	ch := rdch()
+		lex(ch, step)
 
-	scanner()
+		IF s.idx = 3 DO lex(tok, step)
+
+	}
+	writef("*n")
+}
+
+AND rulestr(r) = VALOF SWITCHON r INTO
+{	CASE MUL: RESULTIS "MUL"; ENDCASE
+	CASE LPAREN: RESULTIS "LPAREN"; ENDCASE
+	CASE RPAREN: RESULTIS "RPAREN"; ENDCASE
+	CASE NUM: RESULTIS "NUM"; ENDCASE
+	CASE COM: RESULTIS "COM"; ENDCASE
+	DEFAULT: RESULTIS "NOTARULE"; ENDCASE
 }
