@@ -32,15 +32,11 @@ STATIC
 {	s.m1
 	s.m2
 
-	s.num
 	s.tok
 	s.idx
 	s.step
 
 	s.enabled
-
-	s.dos
-	s.donts
 }
 LET start : => VALOF
 {	LET fname = VEC 10
@@ -132,10 +128,9 @@ AND madder : BE
 	: '(', s MAYBE_DONT BE	{	s.step := DOO
 														s.idx := 0
 													}
-													
+
 	: ')', s DOO BE	{	s.enabled := TRUE
 										s.step := INIT
-										s.dos +:= 1
 									}
 
 	: c'n'|'*''|'t', s MAYBE_DONT BE	{ s.tok!s.idx := c; s.idx +:= 1 }
@@ -147,7 +142,6 @@ AND madder : BE
 
 	: ')', s DEND BE	{	s.enabled := FALSE
 											s.step := INIT
-											s.donts +:= 1
 										}
 
 	: ?, ? BE { s.step := INIT; s.idx := 0 }
