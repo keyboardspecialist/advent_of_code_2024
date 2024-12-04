@@ -20,6 +20,12 @@ MANIFEST
 	NUM2
 	COM
 	REND
+
+	MAYBE_DO
+	MAYBE_DONT
+	DOO
+	DONT
+	DEND
 }
 
 STATIC
@@ -30,6 +36,8 @@ STATIC
 	s.tok
 	s.idx
 	s.step
+
+	s.enabled
 }
 LET start : => VALOF
 {	LET fname = VEC 10
@@ -66,19 +74,15 @@ AND madder : BE
 {	LET tok = VEC 5
 	LET acc = 0
 
-	LET lex
-	: 'm', INIT BE	{	s.tok!s.idx := 'm'
+	LET lexmul
+	: c'm', INIT BE	{	s.tok!s.idx := c
 										s.idx +:= 1
 										s.step := MUL
 									}
 
-	: 'u', MUL BE	{	s.tok!s.idx := 'u'
-									s.idx +:= 1
-								}
-
-	: 'l', MUL BE	{	s.tok!s.idx := 'l'
-									s.idx +:= 1
-								}
+	: c'u'|'l', MUL BE	{	s.tok!s.idx := c
+												s.idx +:= 1
+											}
 
 	: ['m', 'u', 'l'],s MUL BE	{	s.idx := 0
 																s.step := LPAREN
@@ -110,15 +114,30 @@ AND madder : BE
 								s.step := INIT
 							}
 
+	LET lexdo
+	: c'd', s INIT BE	{ writef("Found %c on %s *n", c, rulestr(s)); s.step := MAYBE_DO; s.tok!s.idx := c; s.idx +:= 1 }
+	: c'o', s MAYBE_DO BE	{writef("Found %c on %s *n", c, rulestr(s)); s.tok!s.idx := c; s.idx +:= 1} //
+	: ['d', 'o'], s MAYBE_DO BE	{writef("Found DO on %s *n", rulestr(s)); s.step := MAYBE_DONT }
+	: '(', s MAYBE_DONT BE	{ writef("Found LPAREN on %s *n", rulestr(s)); s.step := DOO
+												}
+	: ')', s DOO BE	{ writef("Found RPAREN on %s *n", rulestr(s)); s.enabled := TRUE //enable muls
+										s.step := INIT
+									}
+	: c'n'|'*''|'t', s MAYBE_DONT BE	{ writef("Found %c on %s *n", c, rulestr(s)); s.tok!s.idx := c; s.idx +:= 1}
+	: ['d', 'o', 'n', '*'', 't'], s MAYBE_DONT BE	{ writef("Found DONT on %s *n", rulestr(s));s.step := DONT; s.idx := 0 }
+	: '(', s DONT BE	{writef("Found LPAREN on %s *n", rulestr(s)); s.step := DEND}
+	: ')', s DEND BE	{writef("Found RPAREN on %s *n", rulestr(s));s.enabled := FALSE; s.step := INIT }
+	: ?, ? BE { s.step := INIT; s.idx := 0 }
+
 	LET ch = rdch()
 	LET idx = 0
 
 	s.tok := tok
 	s.step := INIT
 	UNTIL ch = endstreamch DO
-	{	lex(ch, s.step)
+	{	lexmul(ch, s.step)
 
-		IF s.idx = 3 & s.step = MUL DO lex(tok, s.step)
+		IF s.idx = 3 & s.step = MUL DO lexmul(tok, s.step)
 
 		IF s.step = REND DO
 		{	s.step := INIT //we're valid, compute it
@@ -128,6 +147,30 @@ AND madder : BE
 		ch := rdch()
 	}
 	writef("MADD ACC %d *n", acc)
+
+	//cur 74236024 -- too low
+	acc := 0
+	s.step := INIT
+	s.enabled := TRUE
+	rewindstream(g.hFile)
+	ch := rdch()
+	UNTIL ch = endstreamch DO
+	{	IF s.step <= REND & s.enabled DO lexmul(ch, s.step)
+		IF s.step = INIT | s.step >= MAYBE_DO DO lexdo(ch, s.step)
+
+		MATCH(s.idx, s.step)
+		: 3, MUL BE lexmul(tok, s.step)
+		: 2, MAYBE_DO BE lexdo(tok, s.step)
+		: 5, MAYBE_DONT BE lexdo(tok, s.step)
+
+		IF s.step = REND DO 
+		{	s.step := INIT
+			acc +:= s.m1 * s.m2
+		}
+
+		ch := rdch()
+	} 
+	writef("ENABLE BIT ACC %d *n", acc)
 }
 
 AND rulestr 
@@ -139,3 +182,8 @@ AND rulestr
 : NUM2 => "NUM2"
 : COM => "COM"
 : REND => "REND"
+: MAYBE_DO => "MAYBE_DO"
+: MAYBE_DONT => "MAYBE_DONT"
+: DOO => "DOO"
+: DONT => "DONT"
+: DEND => "DEND"
