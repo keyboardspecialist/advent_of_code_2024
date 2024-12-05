@@ -97,14 +97,17 @@ AND madder : BE
 	: d '0'..'9', s NUM1|NUM2 BE	{	s.tok!s.idx := d - '0'
 																	s.idx +:= 1
 																}
+																
 	: ',',s NUM1 BE	{	s.m1 := tok2int()
 										s.idx := 0
 										s.step := NUM2
 									}
+
 	: ')', s NUM2 BE	{	s.m2 := tok2int()
 											s.idx := 0
 											s.step := REND
 										}
+
 	: ',',s COM BE	{	writef("Found %s *n", rulestr(s)) //maybe not needed, we only eat this char
 										s.step := NUM2
 									}
