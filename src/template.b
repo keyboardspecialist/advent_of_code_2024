@@ -14,7 +14,7 @@ MANIFEST
 
 }
 
-LET start() = VALOF
+LET start : => VALOF
 {	LET fname = VEC 10
 	LET scb = set_ramiostrm()
 	writef("data/day%n.data", AOC_DAY)
