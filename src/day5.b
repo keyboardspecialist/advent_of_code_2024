@@ -12,6 +12,15 @@ GET "u/utils.h"
 MANIFEST
 { AOC_DAY = 5
 
+	lv
+	rv
+
+}
+
+STATIC
+{ s.sum
+	s.pages
+	s.cnt
 }
 
 LET start : => VALOF
@@ -38,6 +47,52 @@ LET start : => VALOF
 }
 
 AND order : BE
-{
+{	LET htbl = VEC 5000
+	LET pages = VEC 24
 
+	LET ln = VEC 80
+	LET eof = fget_uline(ln, 79)
+
+	LET hash : t lv rv BE 
+	{ LET h = lv * 31 + rv
+		t!h := TRUE
+	}
+
+	LET parse
+	: <=0,?,?,c BE s.cnt := c <> writef("*n HIT  %d  *n", c) <> EXIT
+	:	s>0,
+		ln[d1'0'..'9', d2'0'..'9'],
+		i,j BE	{	LET n = (d1-'0') * 10 + (d2-'0')
+							s.pages!j := n
+							parse(s-3, ln+3, i+3, j+1)
+						}
+
+	LET validate : ln BE
+	{	
+
+	}
+
+	s.pages := pages
+
+	UNTIL eof & ln!0 = 0
+	EVERY(ln)
+	: [>0,d1'0'..'9',
+				d2'0'..'9',
+				'|',
+				d3'0'..'9',
+				d4'0'..'9'] BE	{	LET n1, n2 = ?,?
+													n1 := (d1='0') * 10 + (d2-'0')
+													n2 := (d3-'0') * 10 + (d4-'0')
+													
+													hash(htbl, n1,n2)
+												}
+	: [>0,'0'..'9',
+				'0'..'9',
+				','] BE {	parse(ln!0, @(ln!1), 0, 0)
+									
+								}
+	: [?] BE eof := fget_uline(ln, 79)
 }
+
+AND uputs : ln BE FOR i = 1 TO ln!0 DO wrch(ln!i)
+AND uputsn : arr c BE FOR i = 1 TO c DO writef("%d ", arr!i)
