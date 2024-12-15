@@ -36,7 +36,6 @@ LET start : => VALOF
 	}
 
 	start_timer()
-	set_outfile("data/hash.txt")
 	order()
 	stop_timer()
 	cls_infile()
@@ -46,24 +45,17 @@ LET start : => VALOF
 }
 
 AND order : BE
-{	LET htbl = VEC 5000
+{	LET htbl = VEC 10000
 	LET pages = VEC 24
 
 	LET ln = VEC 80
 	LET eof = fget_uline(ln, 79)
 
-	LET hash : k => (k * 2654435761) >> 16 & (2500-1)
-	LET hash2: h1, h2 => hash(hash(h1) * 31 + hash(h2))
+	LET hash : l, r => l * 100 + r
 
 	LET inshash : t, lv, rv BE
-	{	LET h = hash2(lv, rv)
+	{	LET h = hash(lv, rv)
 		LET x = lv << 16 | rv << 8 | 1
-		IF t!h ~= 0 DO
-		{	LET c = t!h
-			LET p1, p2 = c>>16, (c>>8) & #xFF
-			writef("COLLISION  %d |%d  :: %d  *n", lv, rv, h)
-			writef("PREVIOUS %d |%d  ::  %d *n", p1, p2, hash2(p1, p2))
-		}
 		t!h := x
 	}
 
@@ -80,12 +72,8 @@ AND order : BE
 	{	FOR i = 0 TO s.cnt-1 DO
 		{	FOR j = i+1 TO s.cnt-1 DO
 			{	LET v1,v2 = s.pages!i, s.pages!j
-				LET h2 = hash2(v2, v1)
-				IF t!h2 ~= 0 DO
-				{
-			//		writef("[[ %d  %d  ]] *n", v2, v1)
-					RESULTIS FALSE
-				}
+				LET h2 = hash(v2, v1)
+				IF t!h2 ~= 0 RESULTIS FALSE
 			}
 		}
 		RESULTIS TRUE
@@ -94,7 +82,7 @@ AND order : BE
 	s.pages := pages
 	s.sum := 0
 
-	FOR i = 0 TO 5000-1 DO htbl!i := 0
+	FOR i = 0 TO 10000-1 DO htbl!i := 0
 
 	UNTIL eof & ln!0 = 0
 	EVERY(ln)
@@ -108,17 +96,13 @@ AND order : BE
 													
 													inshash(htbl, n1, n2)
 												}
+												
 	: [>0,'0'..'9',
 				'0'..'9',
 				','] BE {	parse(ln!0, @(ln!1), 0, 0)
-									IF validate(htbl) DO
-									{
-										s.sum +:= s.pages!(s.cnt/2)
-									//	writef("CNT %d  HALF %d  %d   *n", s.cnt, s.cnt/2, s.pages!(s.cnt/2))
-										uputsn(s.pages, s.cnt) <> wrch('*n')
-									}
-
+									IF validate(htbl) DO	s.sum +:= s.pages!(s.cnt/2)
 								}
+
 	: [?] BE eof := fget_uline(ln, 79)
 
 	writef("*nSUM IS %d  *n", s.sum)
