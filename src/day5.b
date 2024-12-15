@@ -54,8 +54,7 @@ AND order : BE
 
 	LET inshash : t, lv, rv BE
 	{	LET h = hash(lv, rv)
-		LET x = lv << 16 | rv << 8 | 1
-		t!h := x
+		t!h := TRUE
 	}
 
 	LET parse
@@ -72,7 +71,7 @@ AND order : BE
 		{	FOR j = i+1 TO s.cnt-1 DO
 			{	LET v1,v2 = s.pages!i, s.pages!j
 				LET h = hash(v2, v1)
-				IF t!h ~= 0 RESULTIS FALSE
+				IF t!h = TRUE RESULTIS FALSE
 			}
 		}
 		RESULTIS TRUE
@@ -83,7 +82,7 @@ AND order : BE
 		FOR j = i+1 TO s.cnt-1 DO
 		{	LET v1, v2 = s.pages!i, s.pages!j
 			LET h = hash(v2,v1)
-			IF t!h ~= 0 DO s.pages!i := v2 <> s.pages!j := v1
+			IF t!h = TRUE DO s.pages!i := v2 <> s.pages!j := v1
 		}
 	}
 
