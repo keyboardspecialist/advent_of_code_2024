@@ -49,7 +49,7 @@ AND order : BE
 	LET pages = VEC 24
 
 	LET ln = VEC 80
-	LET eof = fget_uline(ln, 79)
+	LET eof = ?
 
 	LET hash : l, r => l * 100 + r
 
@@ -84,6 +84,7 @@ AND order : BE
 
 	FOR i = 0 TO 10000-1 DO htbl!i := 0
 
+	eof := fget_uline(ln, 79)
 	UNTIL eof & ln!0 = 0
 	EVERY(ln)
 	: [>0,d1'0'..'9',
@@ -96,7 +97,7 @@ AND order : BE
 													
 													inshash(htbl, n1, n2)
 												}
-												
+
 	: [>0,'0'..'9',
 				'0'..'9',
 				','] BE {	parse(ln!0, @(ln!1), 0, 0)
