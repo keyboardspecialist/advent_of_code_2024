@@ -15,8 +15,7 @@ MANIFEST
 }
 
 STATIC
-{ s.sum
-	s.pages
+{ s.pages
 	s.cnt
 }
 
@@ -72,15 +71,24 @@ AND order : BE
 	{	FOR i = 0 TO s.cnt-1 DO
 		{	FOR j = i+1 TO s.cnt-1 DO
 			{	LET v1,v2 = s.pages!i, s.pages!j
-				LET h2 = hash(v2, v1)
-				IF t!h2 ~= 0 RESULTIS FALSE
+				LET h = hash(v2, v1)
+				IF t!h ~= 0 RESULTIS FALSE
 			}
 		}
 		RESULTIS TRUE
 	}
 
+	LET reorder : t BE
+	{	FOR i = 0 TO s.cnt-1 DO
+		FOR j = i+1 TO s.cnt-1 DO
+		{	LET v1, v2 = s.pages!i, s.pages!j
+			LET h = hash(v2,v1)
+			IF t!h ~= 0 DO s.pages!i := v2 <> s.pages!j := v1
+		}
+	}
+
+	LET sum, rsum = 0, 0
 	s.pages := pages
-	s.sum := 0
 
 	FOR i = 0 TO 10000-1 DO htbl!i := 0
 
@@ -101,12 +109,15 @@ AND order : BE
 	: [>0,'0'..'9',
 				'0'..'9',
 				','] BE {	parse(ln!0, @(ln!1), 0, 0)
-									IF validate(htbl) DO	s.sum +:= s.pages!(s.cnt/2)
+									TEST validate(htbl) 
+									THEN sum +:= s.pages!(s.cnt/2)
+									ELSE reorder(htbl) <> rsum +:= s.pages!(s.cnt/2)
 								}
 
 	: [?] BE eof := fget_uline(ln, 79)
 
-	writef("*nSUM IS %d  *n", s.sum)
+	writef("*nSUM IS %d  *n", sum)
+	writef("*nRSUM IS %d  *n", rsum)
 }
 
 AND uputs : ln BE FOR i = 1 TO ln!0 DO wrch(ln!i)
