@@ -60,7 +60,7 @@ AND guard : BE
 	LET scbpos = 0
 
 	LET update
-	: '#',x,y BE s.gd := (s.gd + 1) MOD 4
+	: '#',?,? BE s.gd := (s.gd + 1) MOD 4
 	: '.',
 		x>=0 <130,
 		y >= 0 <130 BE	{	s.grid!(y * s.stride + x) := 'X'
@@ -68,7 +68,7 @@ AND guard : BE
 											s.gx := x; s.gy := y
 										}
 	: 'X',x,y BE s.gx := x <> s.gy := y
-	: ?,x,y BE s.gx := x <> s.gy := y 
+	: ?  ,x,y BE s.gx := x <> s.gy := y 
 
 
 	ch := rdch();
