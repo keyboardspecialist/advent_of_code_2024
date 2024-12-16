@@ -12,10 +12,10 @@ GET "u/utils.h"
 MANIFEST
 { AOC_DAY = 6
 
-	UP = 0
-	RIGHT
-	DOWN
-	LEFT
+	UP = 1
+	RIGHT=2
+	DOWN=4
+	LEFT=8
 
 	CRATE = 'O'
 }
@@ -28,9 +28,9 @@ STATIC
 	s.grid
 	s.stride
 
-	s.visited
 	s.brk
 
+	s.visited
 	s.cnt
 }
 
@@ -67,7 +67,7 @@ AND guard : BE
 	LET sx, sy = 0,0
 
 	LET update
-	: '#',?,? BE s.gd := (s.gd + 1) MOD 4
+	: '#',?,? BE s.gd := (s.gd << 1) MOD #xF
 	: '.',
 		x>=0 <130,
 		y>=0 <130 BE	{	s.grid!(y * s.stride + x) := 'X'
@@ -79,16 +79,26 @@ AND guard : BE
 	: ?  ,x,y BE s.gx := x <> s.gy := y 
 
 	LET lupdate
-	: '#',?,? BE s.gd := (s.gd + 1) MOD 4
-	: CRATE,
-		x>=0 < 130,
-		y>=0 < 130 BE {	TEST s.visited > 0
-										THEN s.brk := TRUE <> s.cnt +:= 1 <> writef("VISITED AGAIN %d  %d  *n", s.visited, s.gd)
-										ELSE s.visited +:= 1// <> writef("VISITED %d  %d *n", s.visited, s.gd)
-										s.gx := x; s.gy := y
+	// : o'#'|CRATE,x,y BE	{	LET p = @(s.grid!(y * s.stride + x))
+	// 											LET n = (!p & #xFF00) >> 8
+	// 											LET v = n & s.gd
+	// 											IF v & s.visited DO s.brk := TRUE <> s.cnt +:= 1 <> writef("BREAKING %d [%d  %d ] *n",s.cnt, x, y)
+	// 											n |:= s.gd
+	// 											!p := (!p & #xFF) | (n << 8)
+	// 											//writef("BUMP %d  [%d  %d ] *n", s.gd, x, y)
+	// 											s.gd := (s.gd << 1) MOD #xF
+	// 											IF o = CRATE DO s.visited := TRUE
+	// 										}
+	: '#',x,y BE s.gd := (s.gd << 1) MOD #xF
+	: CRATE,x,y BE	{	s.visited +:= 1
+										IF s.visited > 1 DO s.cnt +:= 1 <> s.brk := TRUE <> writef("LOOP  %d  *n", s.cnt)
+										s.gd := (s.gd << 1) MOD #xF
+										writef("crate bounce*n")
 									}
-	: 'X',x,y BE s.gx := x <> s.gy := y
-	: ?  ,x,y BE s.gx := x <> s.gy := y 
+	: 'X'|'.',
+		x>=0 <130,
+		y>=0 <130 BE s.gx := x <> s.gy := y
+	: c?,x, y BE s.brk := TRUE
 
 	ch := rdch();
 	UNTIL ch = endstreamch
@@ -115,10 +125,10 @@ AND guard : BE
 
 	UNTIL s.gx >= stride | s.gy >= stride | s.gx < 0 | s.gy < 0
 	MATCH(s.gd)
-	: UP		BE update( grid!((s.gy-1) * stride + s.gx), s.gx, s.gy-1, s.gd)
-	: RIGHT BE update( grid!(s.gy * stride + (s.gx+1)), s.gx+1, s.gy, s.gd)
-	: DOWN	BE update( grid!((s.gy+1) * stride + s.gx), s.gx, s.gy+1, s.gd)
-	: LEFT	BE update( grid!(s.gy * stride + (s.gx-1)), s.gx-1, s.gy, s.gd)
+	: UP		BE update( grid!((s.gy-1) * stride + s.gx), s.gx, s.gy-1)
+	: RIGHT BE update( grid!(s.gy * stride + (s.gx+1)), s.gx+1, s.gy)
+	: DOWN	BE update( grid!((s.gy+1) * stride + s.gx), s.gx, s.gy+1)
+	: LEFT	BE update( grid!(s.gy * stride + (s.gx-1)), s.gx-1, s.gy)
 
 	writef("DISTINCT MOVES %d  *n", s.cnt)
 
@@ -127,26 +137,31 @@ AND guard : BE
 	//489 too low
 	FOR i = 0 TO stride-1 DO
 	{	FOR j = 0 TO stride-1 DO
-		{	//writef("Trying  %d  %d  *n", i, j)
+		{	
 			IF grid!(i * stride + j) = '#' LOOP
 			IF i = sy & j = sx LOOP
 
+			writef("Trying  %d  %d  *n", j, i)
+
 			grid!(i * stride + j) := CRATE
-			s.visited := 0
 			s.brk := FALSE
 			s.gx := sx
 			s.gy := sy
 			s.gd := UP
+			s.visited := 0
 			UNTIL (s.gx >= stride | s.gy >= stride | s.gx < 0 | s.gy < 0) | s.brk
 			MATCH(s.gd)
-			: UP		BE lupdate( grid!((s.gy-1) * stride + s.gx), s.gx, s.gy-1, s.gd)
-			: RIGHT BE lupdate( grid!(s.gy * stride + (s.gx+1)), s.gx+1, s.gy, s.gd)
-			: DOWN	BE lupdate( grid!((s.gy+1) * stride + s.gx), s.gx, s.gy+1, s.gd)
-			: LEFT	BE lupdate( grid!(s.gy * stride + (s.gx-1)), s.gx-1, s.gy, s.gd)
+			: UP		BE lupdate( grid!((s.gy-1) * stride + s.gx)&#xFF, s.gx, s.gy-1)
+			: RIGHT BE lupdate( grid!(s.gy * stride + (s.gx+1))&#xFF, s.gx+1, s.gy)
+			: DOWN	BE lupdate( grid!((s.gy+1) * stride + s.gx)&#xFF, s.gx, s.gy+1)
+			: LEFT	BE lupdate( grid!(s.gy * stride + (s.gx-1))&#xFF, s.gx-1, s.gy)
 
 			grid!(i * stride + j) := '.'
+			reset()
 		}
 	}
 
 	writef("LOOP COUNT %d  *n", s.cnt)
 }
+
+AND reset : BE	FOR i = 0 TO s.stride * s.stride-1 DO s.grid!i := s.grid!i & #xFF
